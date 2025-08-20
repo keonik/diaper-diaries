@@ -1,75 +1,168 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import { DateNavigator } from '@/components/DateNavigator';
+import { EventCard } from '@/components/EventCard';
+import { QuickActionButton } from '@/components/QuickActionButton';
+import { useEvents } from '@/hooks/use-events';
+import { useTheme } from '@/hooks/use-theme';
+import { router } from 'expo-router';
+import { Baby, Droplets, FileText, Moon, RefreshCw, Ruler } from 'lucide-react-native';
+import React, { useMemo, useState } from 'react';
+import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function HomeScreen() {
+  const { getEventsForDate, deleteEvent } = useEvents();
+  const { theme } = useTheme();
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  
+  const selectedDateEvents = useMemo(() => {
+    return getEventsForDate(selectedDate);
+  }, [getEventsForDate, selectedDate]);
+  
+  const isToday = selectedDate.toDateString() === new Date().toDateString();
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
+          <Text style={[styles.greeting, { color: theme.text.primary }]}>Hello, Parent! 👶</Text>
+          <Text style={[styles.subtitle, { color: theme.text.secondary }]}>Track your baby's day</Text>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Quick Actions</Text>
+          <View style={styles.quickActions}>
+            <QuickActionButton
+              icon={<Droplets size={28} color={theme.text.inverse} />}
+              label="Diaper"
+              color={theme.diaper.poop}
+              onPress={() => router.push('/add-diaper')}
+            />
+            <QuickActionButton
+              icon={<Baby size={28} color={theme.text.inverse} />}
+              label="Bottle"
+              color={theme.feeding.bottle}
+              onPress={() => router.push('/add-bottle')}
+            />
+            <QuickActionButton
+              icon={<RefreshCw size={28} color={theme.text.inverse} />}
+              label="Nursing"
+              color={theme.feeding.breast}
+              onPress={() => router.push('/timer')}
+            />
+          </View>
+          <View style={styles.quickActionsRow}>
+            <QuickActionButton
+              icon={<Ruler size={28} color={theme.text.inverse} />}
+              label="Measure"
+              color={theme.success}
+              onPress={() => router.push('/add-measurement')}
+            />
+            <QuickActionButton
+              icon={<FileText size={28} color={theme.text.inverse} />}
+              label="Note"
+              color={theme.text.secondary}
+              onPress={() => router.push('/add-note')}
+            />
+            <QuickActionButton
+              icon={<Moon size={28} color={theme.text.inverse} />}
+              label="Sleep"
+              color={theme.sleep.asleep}
+              onPress={() => router.push('/add-sleep')}
+            />
+          </View>
+        </View>
+
+        <DateNavigator 
+          selectedDate={selectedDate}
+          onDateChange={setSelectedDate}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+        
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>
+            {isToday ? 'Today\'s Events' : 'Events'}
+          </Text>
+          {selectedDateEvents.length === 0 ? (
+            <View style={[styles.emptyState, { backgroundColor: theme.surface }]}>
+              <Text style={[styles.emptyText, { color: theme.text.secondary }]}>
+                {isToday ? 'No events today' : 'No events on this day'}
+              </Text>
+              <Text style={[styles.emptySubtext, { color: theme.text.light }]}>
+                {isToday ? 'Start tracking your baby\'s activities' : 'Try selecting a different date'}
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.eventsList}>
+              {selectedDateEvents.map(event => (
+                <EventCard 
+                  key={event.id} 
+                  event={event} 
+                  onDelete={deleteEvent}
+                />
+              ))}
+            </View>
+          )}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 20,
+  },
+  header: {
+    padding: 20,
+    paddingTop: 10,
+  },
+  greeting: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 16,
+  },
+  section: {
+    paddingHorizontal: 20,
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 16,
+  },
+  quickActions: {
     flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 16,
+  },
+  quickActionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+  },
+  eventsList: {
+    gap: 8,
+  },
+  emptyState: {
     alignItems: 'center',
-    gap: 8,
+    paddingVertical: 40,
+    borderRadius: 12,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  emptyText: {
+    fontSize: 16,
+    marginBottom: 4,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  emptySubtext: {
+    fontSize: 14,
   },
 });
