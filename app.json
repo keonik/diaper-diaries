@@ -15,14 +15,17 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.ob1.diaper-diaries"
+      "bundleIdentifier": "app.ob1.diaper-diaries",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "app.ob1.diaper-diaries",
+      "package": "com.keonik.diaperdiaries",
       "permissions": [
         "android.permission.VIBRATE"
       ]
