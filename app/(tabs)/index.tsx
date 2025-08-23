@@ -1,6 +1,8 @@
+import { ChildSelector } from '@/components/ChildSelector';
 import { DateNavigator } from '@/components/DateNavigator';
 import { EventCard } from '@/components/EventCard';
 import { QuickActionButton } from '@/components/QuickActionButton';
+import { useChildren } from '@/hooks/use-children';
 import { useEvents } from '@/hooks/use-events';
 import { useTheme } from '@/hooks/use-theme';
 import { router } from 'expo-router';
@@ -11,6 +13,7 @@ import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 export default function HomeScreen() {
   const { getEventsForDate, deleteEvent } = useEvents();
   const { theme } = useTheme();
+  const { selectedChild } = useChildren();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   
   const selectedDateEvents = useMemo(() => {
@@ -27,9 +30,15 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={[styles.greeting, { color: theme.text.primary }]}>Hello, Parent! 👶</Text>
-          <Text style={[styles.subtitle, { color: theme.text.secondary }]}>Track your baby's day</Text>
+          <Text style={[styles.greeting, { color: theme.text.primary }]}>
+            {selectedChild ? `Hello, ${selectedChild.name}! 👶` : 'Hello, Parent! 👶'}
+          </Text>
+          <Text style={[styles.subtitle, { color: theme.text.secondary }]}>
+            {selectedChild ? `Track ${selectedChild.name}'s day` : 'Track your baby\'s day'}
+          </Text>
         </View>
+
+        <ChildSelector />
 
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: theme.text.primary }]}>Quick Actions</Text>

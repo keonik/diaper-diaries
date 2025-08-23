@@ -1,3 +1,4 @@
+import { ChildrenProvider } from "@/hooks/use-children";
 import { EventsProvider } from "@/hooks/use-events";
 import { ThemeProvider, useTheme } from "@/hooks/use-theme";
 import { TimerProvider } from "@/hooks/use-timer";
@@ -54,19 +55,55 @@ function RootLayoutNav() {
           presentation: "modal",
         }} 
       />
+      <Stack.Screen 
+        name="add-nursing" 
+        options={{ 
+          title: "Nursing Session",
+          presentation: "modal",
+        }} 
+      />
+      <Stack.Screen 
+        name="add-sleep" 
+        options={{ 
+          title: "Sleep Tracking",
+          presentation: "modal",
+        }} 
+      />
+      <Stack.Screen 
+        name="add-child" 
+        options={{ 
+          title: "Add Child",
+          presentation: "modal",
+        }} 
+      />
+      <Stack.Screen 
+        name="edit-child" 
+        options={{ 
+          title: "Edit Child",
+          presentation: "modal",
+        }} 
+      />
+      <Stack.Screen 
+        name="children" 
+        options={{ 
+          title: "Manage Children",
+        }} 
+      />
     </Stack>
   );
 }
 
 function AppContent() {
   return (
-    <EventsProvider>
-      <TimerProvider>
-        <GestureHandlerRootView>
-          <RootLayoutNav />
-        </GestureHandlerRootView>
-      </TimerProvider>
-    </EventsProvider>
+    <ChildrenProvider>
+      <EventsProvider>
+        <TimerProvider>
+          <GestureHandlerRootView>
+            <RootLayoutNav />
+          </GestureHandlerRootView>
+        </TimerProvider>
+      </EventsProvider>
+    </ChildrenProvider>
   );
 }
 

@@ -1,7 +1,15 @@
 export type EventType = 'diaper' | 'breastfeed' | 'bottle' | 'measurement' | 'note' | 'sleep';
 
+export interface Child {
+  id: string;
+  name: string;
+  birthDate: Date;
+  createdAt: Date;
+}
+
 export interface BaseEvent {
   id: string;
+  childId: string;
   type: EventType;
   timestamp: Date;
   note?: string;

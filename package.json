@@ -8,7 +8,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "update-deps": "bunx npm-check-updates -i"
+    "update-deps": "bunx npm-check-updates -i",
+    "build-and-submit":"eas workflow:run build-and-submit.yml"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",

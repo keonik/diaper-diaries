@@ -3,12 +3,14 @@ import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useChildren } from './use-children';
 
 const STORAGE_KEY = 'baby_events';
 
 export const [EventsProvider, useEvents] = createContextHook(() => {
   const queryClient = useQueryClient();
-  const [events, setEvents] = useState<BabyEvent[]>([]);
+  const { selectedChildId } = useChildren();
+  const [allEvents, setAllEvents] = useState<BabyEvent[]>([]);
 
   const eventsQuery = useQuery({
     queryKey: ['events'],
@@ -20,6 +22,7 @@ export const [EventsProvider, useEvents] = createContextHook(() => {
         return parsed.map((event: any) => ({
           ...event,
           timestamp: new Date(event.timestamp),
+          childId: event.childId || 'default', // Handle legacy events without childId
         }));
       }
       return [];
@@ -40,35 +43,47 @@ export const [EventsProvider, useEvents] = createContextHook(() => {
 
   useEffect(() => {
     if (eventsQuery.data) {
-      setEvents(eventsQuery.data);
+      setAllEvents(eventsQuery.data);
     }
   }, [eventsQuery.data]);
 
+  // Filter events for selected child
+  const events = useMemo(() => {
+    if (!selectedChildId) return [];
+    return allEvents.filter(event => event.childId === selectedChildId);
+  }, [allEvents, selectedChildId]);
+
   const addEvent = useCallback((event: any) => {
+    if (!selectedChildId) {
+      console.warn('No child selected, cannot add event');
+      return;
+    }
+    
     const newEvent = {
       ...event,
       id: Date.now().toString(),
+      childId: selectedChildId,
       timestamp: event.timestamp || new Date(),
     };
     
-    const updatedEvents = [newEvent as BabyEvent, ...events];
-    setEvents(updatedEvents);
-    saveEvents(updatedEvents);
-  }, [events, saveEvents]);
+    const updatedAllEvents = [newEvent as BabyEvent, ...allEvents];
+    setAllEvents(updatedAllEvents);
+    saveEvents(updatedAllEvents);
+  }, [allEvents, selectedChildId, saveEvents]);
 
   const deleteEvent = useCallback((id: string) => {
-    const updatedEvents = events.filter(e => e.id !== id);
-    setEvents(updatedEvents);
-    saveEvents(updatedEvents);
-  }, [events, saveEvents]);
+    const updatedAllEvents = allEvents.filter(e => e.id !== id);
+    setAllEvents(updatedAllEvents);
+    saveEvents(updatedAllEvents);
+  }, [allEvents, saveEvents]);
 
   const updateEvent = useCallback((id: string, updates: Partial<BabyEvent>) => {
-    const updatedEvents = events.map(e => 
+    const updatedAllEvents = allEvents.map(e => 
       e.id === id ? { ...e, ...updates } as BabyEvent : e
     );
-    setEvents(updatedEvents);
-    saveEvents(updatedEvents);
-  }, [events, saveEvents]);
+    setAllEvents(updatedAllEvents);
+    saveEvents(updatedAllEvents);
+  }, [allEvents, saveEvents]);
 
   const recentEvents = useMemo(() => {
     return events.slice(0, 10);
@@ -91,15 +106,21 @@ export const [EventsProvider, useEvents] = createContextHook(() => {
     );
   }, [events]);
 
+  const getAllEventsForChild = useCallback((childId: string) => {
+    return allEvents.filter(event => event.childId === childId);
+  }, [allEvents]);
+
   return useMemo(() => ({
     events,
+    allEvents,
     recentEvents,
     todayEvents,
     getEventsForDate,
+    getAllEventsForChild,
     addEvent,
     deleteEvent,
     updateEvent,
     isLoading: eventsQuery.isLoading,
     isSaving: saveMutation.isPending,
-  }), [events, recentEvents, todayEvents, getEventsForDate, addEvent, deleteEvent, updateEvent, eventsQuery.isLoading, saveMutation.isPending]);
+  }), [events, allEvents, recentEvents, todayEvents, getEventsForDate, getAllEventsForChild, addEvent, deleteEvent, updateEvent, eventsQuery.isLoading, saveMutation.isPending]);
 });
